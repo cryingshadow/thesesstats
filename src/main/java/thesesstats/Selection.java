@@ -2,6 +2,6 @@ package thesesstats;
 
 public enum Selection {
 
-    ALL, FIRST, SECOND;
+    ALL, FIRST, POINTS, SECOND;
 
 }

@@ -28,15 +28,21 @@ public class Main {
         final File root = new File(args[0]);
         final int year = Integer.parseInt(args[1]);
         final Selection selection = args.length == 3 ? Selection.valueOf(args[2]) : Selection.FIRST;
-        Main.writeStatistics(
-            Main.getTitle(selection),
-            year,
-            Main.countGrades(root, year, selection),
-            Main.getStatisticsParentFolder(root, selection)
-            .resolve(Main.STATISTICS)
-            .resolve(Main.toStatisticsFileName(selection, year))
-            .toFile()
-        );
+        switch (selection) {
+        case POINTS:
+            Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
+            break;
+        default:
+            Main.writeStatistics(
+                Main.getTitle(selection),
+                year,
+                Main.countGrades(root, year, selection),
+                Main.getStatisticsParentFolder(root, selection)
+                .resolve(Main.STATISTICS)
+                .resolve(Main.toStatisticsFileName(selection, year))
+                .toFile()
+            );
+        }
     }
 
     private static int[] countGrades(final File root, final int year, final Selection selection) throws IOException {
@@ -106,6 +112,31 @@ public class Main {
         return result;
     }
 
+    private static Points countPoints(final File root, final int year) throws IOException {
+        final Points points = new Points();
+        final Path theses = root.toPath().resolve("Abschlussarbeiten");
+        final Path first = theses.resolve(Main.FIRST);
+        final Path second = theses.resolve(Main.SECOND);
+        points.bachelorFirst = Main.findResultFiles2(first.resolve(Main.BACHELOR), year).size();
+        final List<File> bachelorSecond = Main.findResultFiles2(second.resolve(Main.BACHELOR), year);
+        points.bachelorSecondLong = (int)bachelorSecond.stream().filter(Main::isLong).count();
+        points.bachelorSecondShort = (int)bachelorSecond.stream().filter(Main::isNotLong).count();
+        points.masterFirst = Main.findResultFiles2(first.resolve(Main.MASTER), year).size();
+        final List<File> masterSecond = Main.findResultFiles2(second.resolve(Main.MASTER), year);
+        points.masterSecondLong = (int)masterSecond.stream().filter(Main::isLong).count();
+        points.masterSecondShort = (int)masterSecond.stream().filter(Main::isNotLong).count();
+        points.practicalThesesFirst = Main.findResultFiles2(first.resolve(Main.PA), year).size();
+        final List<File> paSecond = Main.findResultFiles2(second.resolve(Main.PA), year);
+        points.practicalThesesSecondLong = (int)paSecond.stream().filter(Main::isLong).count();
+        points.practicalThesesSecondShort = (int)paSecond.stream().filter(Main::isNotLong).count();
+        points.practicalCheck =
+            (int)Files
+            .list(root.toPath().resolve("Vorlesungen").resolve("Praxischeck").resolve("classes"))
+            .filter(path -> path.getFileName().toString().startsWith(String.valueOf(year - 2000)))
+            .count();
+        return points;
+    }
+
     private static List<File> findResultFiles(final Path path, final int year) throws IOException {
         final List<File> result = new LinkedList<File>();
         result.addAll(Main.findResultFiles2(path.resolve(Main.BACHELOR), year));
@@ -151,6 +182,18 @@ public class Main {
         }
     }
 
+    private static boolean isLong(final File result) {
+        try {
+            return Files.lines(result.toPath()).toList().contains("long");
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static boolean isNotLong(final File result) {
+        return !Main.isLong(result);
+    }
+
     private static String toStatisticsFileName(final Selection selection, final int year) {
         return String.format(
             Main.STATISTICS_FILE,
@@ -159,7 +202,40 @@ public class Main {
         );
     }
 
-    private static void writeStatistics(final String title, final int year, final int[] gradeCount, final File file) throws IOException {
+    private static void writePoints(final Points points, final File file) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write("Erstbetreuung Bachelorarbeiten: ");
+            writer.write(String.valueOf(points.bachelorFirst));
+            writer.write("\nZweitgutachten Bachelorarbeiten (lang): ");
+            writer.write(String.valueOf(points.bachelorSecondLong));
+            writer.write("\nZweitgutachten Bachelorarbeiten (kurz): ");
+            writer.write(String.valueOf(points.bachelorSecondShort));
+            writer.write("\nErstbetreuung Masterarbeiten: ");
+            writer.write(String.valueOf(points.masterFirst));
+            writer.write("\nZweitgutachten Masterarbeiten (lang): ");
+            writer.write(String.valueOf(points.masterSecondLong));
+            writer.write("\nZweitgutachten Masterarbeiten (kurz): ");
+            writer.write(String.valueOf(points.masterSecondShort));
+            writer.write("\nErstbetreuung Praxisarbeiten: ");
+            writer.write(String.valueOf(points.practicalThesesFirst));
+            writer.write("\nZweitgutachten Praxisarbeiten (lang): ");
+            writer.write(String.valueOf(points.practicalThesesSecondLong));
+            writer.write("\nZweitgutachten Praxisarbeiten (kurz): ");
+            writer.write(String.valueOf(points.practicalThesesSecondShort));
+            writer.write("\nPraxischecks: ");
+            writer.write(String.valueOf(points.practicalCheck));
+            writer.write("\n\nSumme: ");
+            writer.write(String.valueOf(points.sum()));
+            writer.write("\n");
+        }
+    }
+
+    private static void writeStatistics(
+        final String title,
+        final int year,
+        final int[] gradeCount,
+        final File file
+    ) throws IOException {
         final int maxCount = Math.max(Arrays.stream(gradeCount).max().orElse(0) + 1, 6);
         double average = 0;
         int count = 0;
