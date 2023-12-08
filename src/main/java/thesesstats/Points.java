@@ -28,11 +28,10 @@ public class Points {
             + this.bachelorSecondLong * 2
             + this.masterFirst * 5
             + this.masterSecondShort
-            + this.masterSecondLong * 2
+            + this.masterSecondLong * 3
             + this.practicalCheck
-            + this.practicalThesesFirst
-            + this.practicalThesesSecondShort
-            + this.practicalThesesSecondLong;
+            + this.practicalThesesFirst * 2
+            + (this.practicalThesesSecondShort + this.practicalThesesSecondLong) / 2;
     }
 
 }
