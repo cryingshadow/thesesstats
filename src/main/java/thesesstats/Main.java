@@ -25,6 +25,10 @@ public class Main {
     private static final String STATISTICS_FILE = "statistics%s%d.tex";
 
     public static void main(final String[] args) throws IOException {
+        if (args.length < 1 || args.length == 1 && "-h".equals(args[0])) {
+            System.out.println("Aufruf mit ROOT YEAR [MODE]");
+            return;
+        }
         final File root = new File(args[0]);
         final int year = Integer.parseInt(args[1]);
         final Selection selection = args.length == 3 ? Selection.valueOf(args[2]) : Selection.FIRST;
