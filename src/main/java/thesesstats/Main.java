@@ -22,45 +22,52 @@ public class Main {
 
     private static final String STATISTICS = "Statistik";
 
-    private static final String STATISTICS_FILE = "statistics%s%d.tex";
+    private static final String STATISTICS_FILE = "statistics%s%s%d.tex";
 
     public static void main(final String[] args) throws IOException {
         if (args.length < 1 || args.length == 1 && "-h".equals(args[0])) {
-            System.out.println("Aufruf mit ROOT YEAR [MODE]");
+            System.out.println(
+                "Aufruf mit ROOT YEAR [MODE], wobei MODE = POINTS | REVIEWER, TYPE mit REVIEWER = ALL | FIRST | SECOND "
+                + "und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
+            );
             return;
         }
         final File root = new File(args[0]);
         final int year = Integer.parseInt(args[1]);
-        final Selection selection = args.length == 3 ? Selection.valueOf(args[2]) : Selection.FIRST;
-        switch (selection) {
-        case POINTS:
+        if (args.length == 3 && "points".equals(args[2].toLowerCase())) {
             Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
-            break;
-        default:
-            Main.writeStatistics(
-                Main.getTitle(selection),
-                year,
-                Main.countGrades(root, year, selection),
-                Main.getStatisticsParentFolder(root, selection)
-                .resolve(Main.STATISTICS)
-                .resolve(Main.toStatisticsFileName(selection, year))
-                .toFile()
-            );
+            return;
         }
+        if (args.length == 2) {
+            for (final Reviewer reviewer : Reviewer.values()) {
+                for (final ThesisType type : ThesisType.values()) {
+                    Main.statistics(root, reviewer, type, year);
+                }
+            }
+            return;
+        }
+        final Reviewer reviewer = args.length >= 3 ? Reviewer.valueOf(args[2]) : Reviewer.FIRST;
+        final ThesisType type = args.length >= 4 ? ThesisType.valueOf(args[3]) : ThesisType.ALL;
+        Main.statistics(root, reviewer, type, year);
     }
 
-    private static int[] countGrades(final File root, final int year, final Selection selection) throws IOException {
+    private static int[] countGrades(
+        final File root,
+        final int year,
+        final Reviewer reviewer,
+        final ThesisType type
+    ) throws IOException {
         final List<File> files;
-        switch (selection) {
+        switch (reviewer) {
         case ALL:
-            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), year);
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), year));
+            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, year);
+            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, year));
             break;
         case FIRST:
-            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), year);
+            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, year);
             break;
         case SECOND:
-            files = Main.findResultFiles(root.toPath().resolve(Main.SECOND), year);
+            files = Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, year);
             break;
         default:
             throw new IllegalStateException("Unknown Selection occurred!");
@@ -121,16 +128,16 @@ public class Main {
         final Path theses = root.toPath().resolve("Abschlussarbeiten");
         final Path first = theses.resolve(Main.FIRST);
         final Path second = theses.resolve(Main.SECOND);
-        points.bachelorFirst = Main.findResultFiles2(first.resolve(Main.BACHELOR), year).size();
-        final List<File> bachelorSecond = Main.findResultFiles2(second.resolve(Main.BACHELOR), year);
+        points.bachelorFirst = Main.findResultFiles(first.resolve(Main.BACHELOR), year).size();
+        final List<File> bachelorSecond = Main.findResultFiles(second.resolve(Main.BACHELOR), year);
         points.bachelorSecondLong = (int)bachelorSecond.stream().filter(Main::isLong).count();
         points.bachelorSecondShort = (int)bachelorSecond.stream().filter(Main::isNotLong).count();
-        points.masterFirst = Main.findResultFiles2(first.resolve(Main.MASTER), year).size();
-        final List<File> masterSecond = Main.findResultFiles2(second.resolve(Main.MASTER), year);
+        points.masterFirst = Main.findResultFiles(first.resolve(Main.MASTER), year).size();
+        final List<File> masterSecond = Main.findResultFiles(second.resolve(Main.MASTER), year);
         points.masterSecondLong = (int)masterSecond.stream().filter(Main::isLong).count();
         points.masterSecondShort = (int)masterSecond.stream().filter(Main::isNotLong).count();
-        points.practicalThesesFirst = Main.findResultFiles2(first.resolve(Main.PA), year).size();
-        final List<File> paSecond = Main.findResultFiles2(second.resolve(Main.PA), year);
+        points.practicalThesesFirst = Main.findResultFiles(first.resolve(Main.PA), year).size();
+        final List<File> paSecond = Main.findResultFiles(second.resolve(Main.PA), year);
         points.practicalThesesSecondLong = (int)paSecond.stream().filter(Main::isLong).count();
         points.practicalThesesSecondShort = (int)paSecond.stream().filter(Main::isNotLong).count();
         points.practicalCheck =
@@ -142,14 +149,6 @@ public class Main {
     }
 
     private static List<File> findResultFiles(final Path path, final int year) throws IOException {
-        final List<File> result = new LinkedList<File>();
-        result.addAll(Main.findResultFiles2(path.resolve(Main.BACHELOR), year));
-        result.addAll(Main.findResultFiles2(path.resolve(Main.MASTER), year));
-        result.addAll(Main.findResultFiles2(path.resolve(Main.PA), year));
-        return result;
-    }
-
-    private static List<File> findResultFiles2(final Path path, final int year) throws IOException {
         final String yearString = String.valueOf(year);
         return Files
             .list(path)
@@ -160,30 +159,36 @@ public class Main {
             .toList();
     }
 
-    private static Path getStatisticsParentFolder(final File root, final Selection selection) {
-        switch (selection) {
-        case ALL:
-            return root.toPath();
-        case FIRST:
-            return root.toPath().resolve(Main.FIRST);
-        case SECOND:
-            return root.toPath().resolve(Main.SECOND);
+    private static List<File> findResultFiles(
+        final Path path,
+        final ThesisType type,
+        final int year
+    ) throws IOException {
+        final List<File> result = new LinkedList<File>();
+        switch (type) {
+        case BA:
+            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
+            break;
+        case MA:
+            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
+            break;
+        case PA:
+            result.addAll(Main.findResultFiles(path.resolve(Main.PA), year));
+            break;
+        case ALL_BUT_PA:
+            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
+            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
+            break;
         default:
-            throw new IllegalStateException("Unknown Selection occurred!");
+            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
+            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
+            result.addAll(Main.findResultFiles(path.resolve(Main.PA), year));
         }
+        return result;
     }
 
-    private static String getTitle(final Selection selection) {
-        switch (selection) {
-        case ALL:
-            return "Abschluss- und Praxisarbeiten mit Betreuer";
-        case FIRST:
-            return "Abschluss- und Praxisarbeiten mit Erstbetreuer";
-        case SECOND:
-            return "Abschluss- und Praxisarbeiten mit Zweitbetreuer";
-        default:
-            throw new IllegalStateException("Unknown Selection occurred!");
-        }
+    private static String getTitle(final Reviewer reviewer, final ThesisType type) {
+        return String.format("%s mit %s", type.title, reviewer.title);
     }
 
     private static boolean isLong(final File result) {
@@ -198,10 +203,24 @@ public class Main {
         return !Main.isLong(result);
     }
 
-    private static String toStatisticsFileName(final Selection selection, final int year) {
+    private static void statistics(final File root, final Reviewer reviewer, final ThesisType type, final int year) throws IOException {
+        Main.writeStatistics(
+            Main.getTitle(reviewer, type),
+            year,
+            Main.countGrades(root, year, reviewer, type),
+            root
+            .toPath()
+            .resolve(Main.STATISTICS)
+            .resolve(Main.toStatisticsFileName(reviewer, type, year))
+            .toFile()
+        );
+    }
+
+    private static String toStatisticsFileName(final Reviewer reviewer, final ThesisType type, final int year) {
         return String.format(
             Main.STATISTICS_FILE,
-            selection.name().charAt(0) + selection.name().substring(1).toLowerCase(),
+            reviewer.name().charAt(0) + reviewer.name().substring(1).toLowerCase(),
+            type.name(),
             year
         );
     }

@@ -89,9 +89,8 @@ public class MainTest {
                     new FileReader(
                         testDir
                         .toPath()
-                        .resolve("Erstgutachten")
                         .resolve("Statistik")
-                        .resolve("statisticsFirst2023.tex")
+                        .resolve("statisticsFirstALL2023.tex")
                         .toFile()
                     )
                 )
