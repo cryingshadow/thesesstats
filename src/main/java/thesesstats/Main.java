@@ -2,7 +2,9 @@ package thesesstats;
 
 import java.io.*;
 import java.nio.file.*;
+import java.time.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class Main {
 
@@ -128,24 +130,56 @@ public class Main {
         final Path theses = root.toPath().resolve("Abschlussarbeiten");
         final Path first = theses.resolve(Main.FIRST);
         final Path second = theses.resolve(Main.SECOND);
-        points.bachelorFirst = Main.findResultFiles(first.resolve(Main.BACHELOR), year).size();
+        points.bachelorFirst = toTheses(Main.findResultFiles(first.resolve(Main.BACHELOR), year));
         final List<File> bachelorSecond = Main.findResultFiles(second.resolve(Main.BACHELOR), year);
-        points.bachelorSecondLong = (int)bachelorSecond.stream().filter(Main::isLong).count();
-        points.bachelorSecondShort = (int)bachelorSecond.stream().filter(Main::isNotLong).count();
-        points.masterFirst = Main.findResultFiles(first.resolve(Main.MASTER), year).size();
+        points.bachelorSecondLong = toTheses(bachelorSecond.stream().filter(Main::isLong));
+        points.bachelorSecondShort = toTheses(bachelorSecond.stream().filter(Main::isNotLong));
+        points.masterFirst = toTheses(Main.findResultFiles(first.resolve(Main.MASTER), year));
         final List<File> masterSecond = Main.findResultFiles(second.resolve(Main.MASTER), year);
-        points.masterSecondLong = (int)masterSecond.stream().filter(Main::isLong).count();
-        points.masterSecondShort = (int)masterSecond.stream().filter(Main::isNotLong).count();
-        points.practicalThesesFirst = Main.findResultFiles(first.resolve(Main.PA), year).size();
+        points.masterSecondLong = toTheses(masterSecond.stream().filter(Main::isLong));
+        points.masterSecondShort = toTheses(masterSecond.stream().filter(Main::isNotLong));
+        points.practicalThesesFirst = toTheses(Main.findResultFiles(first.resolve(Main.PA), year));
         final List<File> paSecond = Main.findResultFiles(second.resolve(Main.PA), year);
-        points.practicalThesesSecondLong = (int)paSecond.stream().filter(Main::isLong).count();
-        points.practicalThesesSecondShort = (int)paSecond.stream().filter(Main::isNotLong).count();
+        points.practicalThesesSecondLong = toTheses(paSecond.stream().filter(Main::isLong));
+        points.practicalThesesSecondShort = toTheses(paSecond.stream().filter(Main::isNotLong));
         points.practicalCheck =
-            (int)Files
+            Files
             .list(root.toPath().resolve("Vorlesungen").resolve("Praxischeck").resolve("classes"))
             .filter(path -> path.getFileName().toString().startsWith(String.valueOf(year - 2000)))
-            .count();
+            .map(
+                path -> {
+                    Path file;
+                    try {
+                        file =
+                            Files
+                            .list(path)
+                            .filter(f -> f.getFileName().toString().endsWith(".txt"))
+                            .findFirst()
+                            .get();
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    final String name = file.getFileName().toString();
+                    final String date = name.substring(0, name.length() - 4);
+                    return LocalDate.parse(
+                        String.format(
+                            "20%s-%s-%s",
+                            date.substring(0, 2),
+                            date.substring(2, 4),
+                            date.substring(4, 6)
+                        )
+                    );
+                }
+            ).toList();
         return points;
+    }
+
+    private static List<Thesis> toTheses(Stream<File> stream) {
+        return stream.map(Thesis::fromFile).toList();
+    }
+
+    private static List<Thesis> toTheses(List<File> resultFiles) {
+        return toTheses(resultFiles.stream());
     }
 
     private static List<File> findResultFiles(final Path path, final int year) throws IOException {
@@ -228,25 +262,25 @@ public class Main {
     private static void writePoints(final Points points, final File file) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write("Erstbetreuung Bachelorarbeiten: ");
-            writer.write(String.valueOf(points.bachelorFirst));
+            writer.write(String.valueOf(points.bachelorFirst.size()));
             writer.write("\nZweitgutachten Bachelorarbeiten (lang): ");
-            writer.write(String.valueOf(points.bachelorSecondLong));
+            writer.write(String.valueOf(points.bachelorSecondLong.size()));
             writer.write("\nZweitgutachten Bachelorarbeiten (kurz): ");
-            writer.write(String.valueOf(points.bachelorSecondShort));
+            writer.write(String.valueOf(points.bachelorSecondShort.size()));
             writer.write("\nErstbetreuung Masterarbeiten: ");
-            writer.write(String.valueOf(points.masterFirst));
+            writer.write(String.valueOf(points.masterFirst.size()));
             writer.write("\nZweitgutachten Masterarbeiten (lang): ");
-            writer.write(String.valueOf(points.masterSecondLong));
+            writer.write(String.valueOf(points.masterSecondLong.size()));
             writer.write("\nZweitgutachten Masterarbeiten (kurz): ");
-            writer.write(String.valueOf(points.masterSecondShort));
+            writer.write(String.valueOf(points.masterSecondShort.size()));
             writer.write("\nErstbetreuung Praxisarbeiten: ");
-            writer.write(String.valueOf(points.practicalThesesFirst));
+            writer.write(String.valueOf(points.practicalThesesFirst.size()));
             writer.write("\nZweitgutachten Praxisarbeiten (lang): ");
-            writer.write(String.valueOf(points.practicalThesesSecondLong));
+            writer.write(String.valueOf(points.practicalThesesSecondLong.size()));
             writer.write("\nZweitgutachten Praxisarbeiten (kurz): ");
-            writer.write(String.valueOf(points.practicalThesesSecondShort));
+            writer.write(String.valueOf(points.practicalThesesSecondShort.size()));
             writer.write("\nPraxischecks: ");
-            writer.write(String.valueOf(points.practicalCheck));
+            writer.write(String.valueOf(points.practicalCheck.size()));
             writer.write("\n\nSumme: ");
             writer.write(String.valueOf(points.sum()));
             writer.write("\n");

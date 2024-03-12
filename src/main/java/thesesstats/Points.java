@@ -1,37 +1,40 @@
 package thesesstats;
 
+import java.time.*;
+import java.util.*;
+
 public class Points {
 
-    public int bachelorFirst;
+    public List<Thesis> bachelorFirst;
 
-    public int bachelorSecondLong;
+    public List<Thesis> bachelorSecondLong;
 
-    public int bachelorSecondShort;
+    public List<Thesis> bachelorSecondShort;
 
-    public int masterFirst;
+    public List<Thesis> masterFirst;
 
-    public int masterSecondLong;
+    public List<Thesis> masterSecondLong;
 
-    public int masterSecondShort;
+    public List<Thesis> masterSecondShort;
 
-    public int practicalCheck;
+    public List<LocalDate> practicalCheck;
 
-    public int practicalThesesFirst;
+    public List<Thesis> practicalThesesFirst;
 
-    public int practicalThesesSecondLong;
+    public List<Thesis> practicalThesesSecondLong;
 
-    public int practicalThesesSecondShort;
+    public List<Thesis> practicalThesesSecondShort;
 
     public int sum() {
-        return this.bachelorFirst * 3
-            + this.bachelorSecondShort
-            + this.bachelorSecondLong * 2
-            + this.masterFirst * 5
-            + this.masterSecondShort
-            + this.masterSecondLong * 3
-            + this.practicalCheck
-            + this.practicalThesesFirst * 2
-            + (this.practicalThesesSecondShort + this.practicalThesesSecondLong) / 2;
+        return this.bachelorFirst.size() * 3
+            + this.bachelorSecondShort.size()
+            + this.bachelorSecondLong.size() * 2
+            + this.masterFirst.size() * 5
+            + this.masterSecondShort.size()
+            + this.masterSecondLong.size() * 3
+            + this.practicalCheck.size()
+            + this.practicalThesesFirst.size() * 2
+            + (this.practicalThesesSecondShort.size() + this.practicalThesesSecondLong.size()) / 2;
     }
 
 }
