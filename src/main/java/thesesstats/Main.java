@@ -130,18 +130,18 @@ public class Main {
         final Path theses = root.toPath().resolve("Abschlussarbeiten");
         final Path first = theses.resolve(Main.FIRST);
         final Path second = theses.resolve(Main.SECOND);
-        points.bachelorFirst = toTheses(Main.findResultFiles(first.resolve(Main.BACHELOR), year));
+        points.bachelorFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.BACHELOR), year));
         final List<File> bachelorSecond = Main.findResultFiles(second.resolve(Main.BACHELOR), year);
-        points.bachelorSecondLong = toTheses(bachelorSecond.stream().filter(Main::isLong));
-        points.bachelorSecondShort = toTheses(bachelorSecond.stream().filter(Main::isNotLong));
-        points.masterFirst = toTheses(Main.findResultFiles(first.resolve(Main.MASTER), year));
+        points.bachelorSecondLong = Main.toTheses(bachelorSecond.stream().filter(Main::isLong));
+        points.bachelorSecondShort = Main.toTheses(bachelorSecond.stream().filter(Main::isNotLong));
+        points.masterFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.MASTER), year));
         final List<File> masterSecond = Main.findResultFiles(second.resolve(Main.MASTER), year);
-        points.masterSecondLong = toTheses(masterSecond.stream().filter(Main::isLong));
-        points.masterSecondShort = toTheses(masterSecond.stream().filter(Main::isNotLong));
-        points.practicalThesesFirst = toTheses(Main.findResultFiles(first.resolve(Main.PA), year));
+        points.masterSecondLong = Main.toTheses(masterSecond.stream().filter(Main::isLong));
+        points.masterSecondShort = Main.toTheses(masterSecond.stream().filter(Main::isNotLong));
+        points.practicalThesesFirst = Main.toTheses(Main.findResultFiles(first.resolve(Main.PA), year));
         final List<File> paSecond = Main.findResultFiles(second.resolve(Main.PA), year);
-        points.practicalThesesSecondLong = toTheses(paSecond.stream().filter(Main::isLong));
-        points.practicalThesesSecondShort = toTheses(paSecond.stream().filter(Main::isNotLong));
+        points.practicalThesesSecondLong = Main.toTheses(paSecond.stream().filter(Main::isLong));
+        points.practicalThesesSecondShort = Main.toTheses(paSecond.stream().filter(Main::isNotLong));
         points.practicalCheck =
             Files
             .list(root.toPath().resolve("Vorlesungen").resolve("Praxischeck").resolve("classes"))
@@ -156,7 +156,7 @@ public class Main {
                             .filter(f -> f.getFileName().toString().endsWith(".txt"))
                             .findFirst()
                             .get();
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         throw new IllegalStateException(e);
                     }
                     final String name = file.getFileName().toString();
@@ -172,14 +172,6 @@ public class Main {
                 }
             ).toList();
         return points;
-    }
-
-    private static List<Thesis> toTheses(Stream<File> stream) {
-        return stream.map(Thesis::fromFile).toList();
-    }
-
-    private static List<Thesis> toTheses(List<File> resultFiles) {
-        return toTheses(resultFiles.stream());
     }
 
     private static List<File> findResultFiles(final Path path, final int year) throws IOException {
@@ -259,6 +251,14 @@ public class Main {
         );
     }
 
+    private static List<Thesis> toTheses(final List<File> resultFiles) {
+        return Main.toTheses(resultFiles.stream());
+    }
+
+    private static List<Thesis> toTheses(final Stream<File> stream) {
+        return stream.map(Thesis::fromFile).toList();
+    }
+
     private static void writePoints(final Points points, final File file) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write("Erstbetreuung Bachelorarbeiten: ");
@@ -283,6 +283,22 @@ public class Main {
             writer.write(String.valueOf(points.practicalCheck.size()));
             writer.write("\n\nSumme: ");
             writer.write(String.valueOf(points.sum()));
+            writer.write("\n\n\n");
+            writer.write("Details:\n\n");
+            Main.writeTheses("Erstbetreuung Bachelorarbeiten", points.bachelorFirst, writer);
+            Main.writeTheses("Zweitgutachten Bachelorarbeiten (lang)", points.bachelorSecondLong, writer);
+            Main.writeTheses("Zweitgutachten Bachelorarbeiten (kurz)", points.bachelorSecondShort, writer);
+            Main.writeTheses("Erstbetreuung Masterarbeiten", points.masterFirst, writer);
+            Main.writeTheses("Zweitgutachten Masterarbeiten (lang)", points.masterSecondLong, writer);
+            Main.writeTheses("Zweitgutachten Masterarbeiten (kurz)", points.masterSecondShort, writer);
+            Main.writeTheses("Erstbetreuung Praxisarbeiten", points.practicalThesesFirst, writer);
+            Main.writeTheses("Zweitgutachten Praxisarbeiten (lang)", points.practicalThesesSecondLong, writer);
+            Main.writeTheses("Zweitgutachten Praxisarbeiten (kurz)", points.practicalThesesSecondShort, writer);
+            writer.write("Praxischecks:\n");
+            for (final LocalDate date : points.practicalCheck) {
+                writer.write(date.toString());
+                writer.write("\n");
+            }
             writer.write("\n");
         }
     }
@@ -352,6 +368,19 @@ public class Main {
             writer.write("\\end{center}\n\n");
             writer.write("\\end{document}\n");
         }
+    }
+
+    private static void writeTheses(final String section, final List<Thesis> theses, final BufferedWriter writer)
+    throws IOException {
+        writer.write(section);
+        writer.write(":\n");
+        for (final Thesis thesis : theses) {
+            writer.write(thesis.name());
+            writer.write(": ");
+            writer.write(thesis.title());
+            writer.write("\n");
+        }
+        writer.write("\n");
     }
 
 }
