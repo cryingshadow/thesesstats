@@ -3,10 +3,10 @@
  */
 package thesesstats;
 
+import java.io.*;
+
 import org.testng.*;
 import org.testng.annotations.*;
-
-import java.io.*;
 
 public class MainTest {
     private static interface Action {
@@ -76,7 +76,7 @@ public class MainTest {
     }
 
     @Test
-    public void mainTest() throws IOException {
+    public void mainTest() throws IOException, InterruptedException {
         final File locateTmp = File.createTempFile("locate", "tmp");
         final File testDir = new File(locateTmp.getParentFile().getAbsolutePath(), "thesesstats");
         testDir.mkdir();

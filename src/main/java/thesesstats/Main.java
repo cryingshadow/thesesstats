@@ -10,6 +10,8 @@ public class Main {
 
     private static final String BACHELOR = "Bachelor";
 
+    private static final String ERROR = "errors.txt";
+
     private static final String FIRST = "Erstgutachten";
 
     private static final double[] GRADES = new double[] {1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0};
@@ -26,11 +28,11 @@ public class Main {
 
     private static final String STATISTICS_FILE = "statistics%s%s%d.tex";
 
-    public static void main(final String[] args) throws IOException {
-        if (args.length < 1 || args.length == 1 && "-h".equals(args[0])) {
+    public static void main(final String[] args) throws IOException, InterruptedException {
+        if (args.length < 2 || args.length == 1 && "-h".equals(args[0])) {
             System.out.println(
-                "Aufruf mit ROOT YEAR [MODE], wobei MODE = POINTS | REVIEWER, TYPE mit REVIEWER = ALL | FIRST | SECOND "
-                + "und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
+                "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) mit "
+                + "REVIEWER = ALL | FIRST | SECOND und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
             );
             return;
         }
@@ -38,6 +40,10 @@ public class Main {
         final int year = Integer.parseInt(args[1]);
         if (args.length == 3 && "points".equals(args[2].toLowerCase())) {
             Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
+            return;
+        }
+        if (args.length == 3 && "prepare".equals(args[2].toLowerCase())) {
+            Main.prepare(root, year);
             return;
         }
         if (args.length == 2) {
@@ -174,10 +180,30 @@ public class Main {
         return points;
     }
 
-    private static List<File> findResultFiles(final Path path, final int year) throws IOException {
+    private static void createReviewTemplate(final File resultFile) {
+//        ThesisType thesisType = ThesisType.fromFile(resultFile);
+//        Path directory = resultFile.getAbsoluteFile().toPath().getParent();
+//        // TODO Auto-generated method stub
+//        try (BufferedWriter writer = new BufferedWriter(new FileWriter(directory.resolve(String.format("gutachten", null))))) {
+//
+//        }
+    }
+
+    private static boolean errorFileExists(final File resultFile) {
+        return resultFile.toPath().getParent().resolve(Main.ERROR).toFile().exists();
+    }
+
+    private static List<File> findAllResultFiles(final File root, final int year) throws IOException {
+        final Path rootPath = root.toPath();
+        final List<File> files = Main.findResultFiles(rootPath.resolve(Main.FIRST), ThesisType.ALL, year);
+        files.addAll(Main.findResultFiles(rootPath.resolve(Main.SECOND), ThesisType.ALL, year));
+        return files;
+    }
+
+    private static List<File> findResultFiles(final Path thesisTypePath, final int year) throws IOException {
         final String yearString = String.valueOf(year);
         return Files
-            .list(path)
+            .list(thesisTypePath)
             .filter(p -> p.getFileName().toString().startsWith(yearString))
             .map(p -> p.resolve(Main.RESULT))
             .filter(p -> Files.exists(p))
@@ -186,29 +212,29 @@ public class Main {
     }
 
     private static List<File> findResultFiles(
-        final Path path,
+        final Path reviewerTypePath,
         final ThesisType type,
         final int year
     ) throws IOException {
         final List<File> result = new LinkedList<File>();
         switch (type) {
         case BA:
-            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
             break;
         case MA:
-            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
             break;
         case PA:
-            result.addAll(Main.findResultFiles(path.resolve(Main.PA), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.PA), year));
             break;
         case ALL_BUT_PA:
-            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
-            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
             break;
         default:
-            result.addAll(Main.findResultFiles(path.resolve(Main.BACHELOR), year));
-            result.addAll(Main.findResultFiles(path.resolve(Main.MASTER), year));
-            result.addAll(Main.findResultFiles(path.resolve(Main.PA), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.BACHELOR), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.MASTER), year));
+            result.addAll(Main.findResultFiles(reviewerTypePath.resolve(Main.PA), year));
         }
         return result;
     }
@@ -227,6 +253,62 @@ public class Main {
 
     private static boolean isNotLong(final File result) {
         return !Main.isLong(result);
+    }
+
+    private static void prepare(final File root, final int year) throws IOException, InterruptedException {
+        for (final File resultFile : Main.findAllResultFiles(root, year)) {
+            if (!Main.errorFileExists(resultFile)) {
+                Main.spellcheck(resultFile);
+            }
+            if (!Main.reviewFileExists(resultFile)) {
+                Main.createReviewTemplate(resultFile);
+            }
+        }
+    }
+
+    private static boolean reviewFileExists(final File resultFile) {
+        return Arrays
+            .stream(resultFile.toPath().getParent().toFile().list())
+            .filter(name -> name.startsWith("gutachten"))
+            .findAny()
+            .isPresent();
+    }
+
+    private static void spellcheck(final File resultFile) throws IOException, InterruptedException {
+        if (Arrays.stream(resultFile.getParentFile().list()).filter(name -> name.endsWith(".pdf")).count() != 1) {
+            return;
+        }
+        final File pdf =
+            Arrays
+            .stream(resultFile.getParentFile().listFiles())
+            .filter(file -> file.getName().endsWith(".pdf"))
+            .findAny()
+            .get();
+        final File directory = resultFile.getParentFile().getAbsoluteFile();
+        if (
+            new ProcessBuilder()
+            .directory(directory)
+            .command("cmd.exe", "/c", String.format("pdftotext %s text.txt", pdf.getName()))
+            .start()
+            .waitFor() != 0
+        ) {
+            throw new IOException("Non-zero exit code!");
+        }
+        if (
+            new ProcessBuilder()
+            .directory(directory)
+            .command(
+                "java",
+                "-jar",
+                "..\\..\\..\\..\\spella.jar",
+                "text.txt",
+                "errors.txt",
+                "..\\..\\..\\..\\..\\templates\\personal.txt"
+            ).start()
+            .waitFor() != 0
+        ) {
+            throw new IOException("Non-zero exit code!");
+        }
     }
 
     private static void statistics(final File root, final Reviewer reviewer, final ThesisType type, final int year) throws IOException {
