@@ -243,14 +243,14 @@ public class Main {
                 writer.write("\\appearancei{}\n");
                 writer.write("\\tocqualityi{}\n");
                 writer.write("\\listsi{}\n");
-                writer.write("\\goalii{}\n");
+                writer.write("\\goaliii{}\n");
                 writer.write("\\contributionsii{}\n");
                 writer.write("\\structurequalityiii{}\n");
                 writer.write("\\referencesi{}\n");
                 writer.write("\\conceptsintroducedi{}\n");
                 writer.write("\\basicsusedi{}\n");
                 writer.write("\\futurei{}\n");
-                writer.write("\\conclusioni{}\n");
+                writer.write("\\conclusionii{}\n");
                 writer.write("\\evaluationpartresult{15}\n");
             } else {
                 writer.write("\\appearancei{}\n");
@@ -322,6 +322,7 @@ public class Main {
                 writer.write("\\quotingdensityii{}\n");
                 writer.write("\\literaturestylei{}\n");
                 writer.write("\\literaturepropsi{}\n");
+                writer.write("\\diligenceiii{}\n");
                 writer.write("\\evaluationpartresult{15}\n");
             } else {
                 writer.write("\\distancesi{}\n");
@@ -336,6 +337,7 @@ public class Main {
                 writer.write("\\quotingdensityii{}\n");
                 writer.write("\\literaturestylei{}\n");
                 writer.write("\\literaturepropsii{}\n");
+                writer.write("\\diligenceiii{}\n");
                 writer.write("\\evaluationpartresult{20}\n");
             }
             writer.write("}\n\n");
