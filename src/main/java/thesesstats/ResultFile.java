@@ -1,11 +1,12 @@
 package thesesstats;
 
 import java.io.*;
+import java.nio.charset.*;
 
 public record ResultFile(String[] nameParts, String title) {
 
     public static ResultFile create(final File resultFile) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(resultFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(resultFile, Charset.forName("UTF-8")))) {
             reader.readLine();
             reader.readLine();
             final String[] nameParts = reader.readLine().split(" ");

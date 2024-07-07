@@ -1,6 +1,7 @@
 package thesesstats;
 
 import java.io.*;
+import java.nio.charset.*;
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
@@ -27,6 +28,8 @@ public class Main {
     private static final String STATISTICS = "Statistik";
 
     private static final String STATISTICS_FILE = "statistics%s%s%d.tex";
+
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     public static void main(final String[] args) throws IOException, InterruptedException {
         if (args.length < 2 || args.length == 1 && "-h".equals(args[0])) {
@@ -203,7 +206,12 @@ public class Main {
         final boolean isMaster = thesisType == ThesisType.MA;
         try (
             BufferedWriter writer =
-                new BufferedWriter(new FileWriter(directory.resolve(String.format("%s.tex", prefix)).toFile()))
+                new BufferedWriter(
+                    new FileWriter(
+                        directory.resolve(String.format("%s.tex", prefix)).toFile(),
+                        Main.UTF8
+                    )
+                )
         ) {
             writer.write("\\documentclass{article}\n\n");
             writer.write("\\input{../../../../../templates/review/packages.tex}\n\n");
@@ -351,7 +359,7 @@ public class Main {
         try (
             BufferedWriter writer =
                 new BufferedWriter(
-                    new FileWriter(directory.resolve(String.format("%smitKommentaren.tex", prefix)).toFile())
+                    new FileWriter(directory.resolve(String.format("%smitKommentaren.tex", prefix)).toFile(), Main.UTF8)
                 )
         ) {
             writer.write("\\documentclass{article}\n\n");
