@@ -299,8 +299,8 @@ public class Main {
                 writer.write("\\objectivityii{}\n");
                 writer.write("\\reliabilityii{}\n");
                 writer.write("\\validityii{}\n");
-                writer.write("\\comprehensibilityiii{}\n");
-                writer.write("\\examplesiii{}\n");
+                writer.write("\\comprehensibilityiv{}\n");
+                writer.write("\\examplesiv{}\n");
                 writer.write("\\evaluationpartresult{30}\n");
             }
             writer.write("}\n\n");
