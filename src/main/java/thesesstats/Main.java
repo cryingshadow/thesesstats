@@ -469,16 +469,20 @@ public class Main {
             .findAny()
             .get();
         final File directory = resultFile.getParentFile().getAbsoluteFile();
+        final File textFile = directory.toPath().resolve("text.txt").toFile();
         if (
+            !textFile.exists() &&
             new ProcessBuilder()
             .directory(directory)
-            .command("cmd.exe", "/c", String.format("pdftotext %s text.txt", pdf.getName()))
+            .command("cmd.exe", "/c", String.format("pdftotext \"%s\" text.txt", pdf.getName().replaceAll(" ", "\\ ")))
             .start()
             .waitFor() != 0
         ) {
             throw new IOException("Non-zero exit code!");
         }
+        final File errorsFile = directory.toPath().resolve("errors.txt").toFile();
         if (
+            !errorsFile.exists() &&
             new ProcessBuilder()
             .directory(directory)
             .command(
