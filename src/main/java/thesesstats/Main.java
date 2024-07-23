@@ -87,11 +87,14 @@ public class Main {
     }
 
     private static int[] countGrades(final List<File> files) throws IOException {
-        final int[] result = new int[11];
+        final int[] result = new int[Main.GRADES.length];
         for (final File file : files) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 reader.readLine();
                 final String grade = reader.readLine();
+                if (grade.isBlank()) {
+                    continue;
+                }
                 switch (grade) {
                 case "1,0":
                     result[0]++;
@@ -499,7 +502,12 @@ public class Main {
         }
     }
 
-    private static void statistics(final File root, final Reviewer reviewer, final ThesisType type, final int year) throws IOException {
+    private static void statistics(
+        final File root,
+        final Reviewer reviewer,
+        final ThesisType type,
+        final int year
+    ) throws IOException {
         Main.writeStatistics(
             Main.getTitle(reviewer, type),
             year,
