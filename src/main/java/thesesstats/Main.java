@@ -246,9 +246,8 @@ public class Main {
             writer.write("\\setboolean{restrictionnote}{false}\n");
             writer.write("\\setboolean{pagebreakmiddle}{true}\n");
             writer.write("\\setboolean{pagebreaktotal}{false}\n");
-            if (thesisType != ThesisType.PA) {
-                writer.write("\\setboolean{tworeviewers}{false}\n");
-            }
+            writer.write("\\setboolean{tworeviewers}{false}\n");
+            writer.write("\\newcommand{\\otherreviewer}{Dipl.\\ Inf.\\ Fethi Temiz}\n");
             writer.write("\n\\newcommand{\\structureReview}{%\n");
             if (isMaster) {
                 writer.write("\\appearancei{}\n");
