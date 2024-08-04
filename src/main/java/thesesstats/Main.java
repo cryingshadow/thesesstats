@@ -481,7 +481,13 @@ public class Main {
             .start()
             .waitFor() != 0
         ) {
-            throw new IOException("Non-zero exit code!");
+            throw new IOException(
+                String.format(
+                    "Non-zero exit code! Command: pdftotext, Directory: %s, File: %s",
+                    directory.toString(),
+                    pdf.getName()
+                )
+            );
         }
         final File errorsFile = directory.toPath().resolve("errors.txt").toFile();
         if (
@@ -498,7 +504,9 @@ public class Main {
             ).start()
             .waitFor() != 0
         ) {
-            throw new IOException("Non-zero exit code!");
+            throw new IOException(
+                String.format("Non-zero exit code! Command: spella, Directory: %s", directory.toString())
+            );
         }
     }
 
