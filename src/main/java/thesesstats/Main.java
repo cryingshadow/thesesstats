@@ -247,7 +247,9 @@ public class Main {
             writer.write("\\setboolean{pagebreakmiddle}{true}\n");
             writer.write("\\setboolean{pagebreaktotal}{false}\n");
             writer.write("\\setboolean{tworeviewers}{false}\n");
-            writer.write("\\newcommand{\\otherreviewer}{Dipl.\\ Inf.\\ Fethi Temiz}\n");
+            writer.write("\\newcommand{\\otherreviewer}{");
+            writer.write(fileContent.otherReviewer());
+            writer.write("}\n");
             writer.write("\n\\newcommand{\\structureReview}{%\n");
             if (isMaster) {
                 writer.write("\\appearancei{}\n");
