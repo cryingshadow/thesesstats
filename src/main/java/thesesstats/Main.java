@@ -32,6 +32,10 @@ public class Main {
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     public static void main(final String[] args) throws IOException, InterruptedException {
+        if (args.length == 1 && "-s".equals(args[0])) {
+            Main.support(new File(System.getProperty("user.dir")));
+            return;
+        }
         if (args.length < 2 || args.length == 1 && "-h".equals(args[0])) {
             System.out.println(
                 "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) mit "
@@ -248,7 +252,9 @@ public class Main {
             writer.write("\\setboolean{pagebreaktotal}{false}\n");
             writer.write("\\setboolean{tworeviewers}{false}\n");
             writer.write("\\newcommand{\\otherreviewer}{");
-            writer.write(fileContent.otherReviewer());
+            if (fileContent.otherReviewer() != null) {
+                writer.write(fileContent.otherReviewer());
+            }
             writer.write("}\n");
             writer.write("\n\\newcommand{\\structureReview}{%\n");
             if (isMaster) {
@@ -527,6 +533,19 @@ public class Main {
             .resolve(Main.toStatisticsFileName(reviewer, type, year))
             .toFile()
         );
+    }
+
+    private static void support(final File root) throws IOException {
+        for (int year = 2022; year <= 2024; year++) {
+            for (final File resultFile : Main.findAllResultFiles(root, year)) {
+                final ResultFile content = ResultFile.create(resultFile);
+                if (content.otherReviewer() != null) {
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
+                        content.setOtherReviewer(content.otherReviewer().replace(".\\ ", ".\\,")).write(writer);
+                    }
+                }
+            }
+        }
     }
 
     private static String toStatisticsFileName(final Reviewer reviewer, final ThesisType type, final int year) {
