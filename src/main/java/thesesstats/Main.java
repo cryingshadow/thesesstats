@@ -5,6 +5,7 @@ import java.nio.charset.*;
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.stream.*;
 
 public class Main {
@@ -16,6 +17,8 @@ public class Main {
     private static final String FIRST = "Erstgutachten";
 
     private static final double[] GRADES = new double[] {1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0, 5.0};
+
+    private static final Logger LOGGER;
 
     private static final String MASTER = "Master";
 
@@ -31,6 +34,13 @@ public class Main {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
+    static {
+        LOGGER = LogManager.getLogManager().getLogger("");
+        final StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
+        handler.setLevel(Level.ALL);
+        Main.LOGGER.addHandler(handler);
+    }
+
     public static void main(final String[] args) throws IOException, InterruptedException {
         if (args.length == 1 && "-s".equals(args[0])) {
             Main.support(new File(System.getProperty("user.dir")));
@@ -43,17 +53,30 @@ public class Main {
             );
             return;
         }
-        final File root = new File(args[0]);
-        final int year = Integer.parseInt(args[1]);
-        if (args.length == 3 && "points".equals(args[2].toLowerCase())) {
+        final String[] argsWithoutVerbose;
+        if (Arrays.stream(args).anyMatch(arg -> "-v".equals(arg))) {
+            Main.LOGGER.setLevel(Level.ALL);
+            argsWithoutVerbose = Arrays.stream(args).filter(arg -> !"-v".equals(arg)).toArray(String[]::new);
+        } else {
+            Main.LOGGER.setLevel(Level.WARNING);
+            argsWithoutVerbose = args;
+        }
+        Main.LOGGER.log(Level.FINE, "Root file: " + argsWithoutVerbose[0]);
+        final File root = new File(argsWithoutVerbose[0]);
+        Main.LOGGER.log(Level.FINE, "Year: " + argsWithoutVerbose[1]);
+        final int year = Integer.parseInt(argsWithoutVerbose[1]);
+        if (argsWithoutVerbose.length == 3 && "points".equals(argsWithoutVerbose[2].toLowerCase())) {
+            Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
             Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
             return;
         }
-        if (args.length == 3 && "prepare".equals(args[2].toLowerCase())) {
+        if (argsWithoutVerbose.length == 3 && "prepare".equals(argsWithoutVerbose[2].toLowerCase())) {
+            Main.LOGGER.log(Level.FINE, "Preparing reviews...");
             Main.prepare(root, year);
             return;
         }
-        if (args.length == 2) {
+        Main.LOGGER.log(Level.FINE, "Computing statistics...");
+        if (argsWithoutVerbose.length == 2) {
             for (final Reviewer reviewer : Reviewer.values()) {
                 for (final ThesisType type : ThesisType.values()) {
                     Main.statistics(root, reviewer, type, year);
@@ -61,8 +84,8 @@ public class Main {
             }
             return;
         }
-        final Reviewer reviewer = args.length >= 3 ? Reviewer.valueOf(args[2]) : Reviewer.FIRST;
-        final ThesisType type = args.length >= 4 ? ThesisType.valueOf(args[3]) : ThesisType.ALL;
+        final Reviewer reviewer = argsWithoutVerbose.length >= 3 ? Reviewer.valueOf(argsWithoutVerbose[2]) : Reviewer.FIRST;
+        final ThesisType type = argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
         Main.statistics(root, reviewer, type, year);
     }
 
@@ -396,6 +419,7 @@ public class Main {
 
     private static List<File> findResultFiles(final Path thesisTypePath, final int year) throws IOException {
         final String yearString = String.valueOf(year);
+        Main.LOGGER.log(Level.FINE, "Finding result files in: " + thesisTypePath.toString());
         return Files
             .list(thesisTypePath)
             .filter(p -> p.getFileName().toString().startsWith(yearString))
@@ -451,12 +475,16 @@ public class Main {
 
     private static void prepare(final File root, final int year) throws IOException, InterruptedException {
         for (final File resultFile : Main.findAllResultFiles(root, year)) {
+            Main.LOGGER.log(Level.FINE, "Preparing result file: " + resultFile.toString());
             if (!Main.errorFileExists(resultFile)) {
+                Main.LOGGER.log(Level.FINE, "Spell checking result file: " + resultFile.toString());
                 Main.spellcheck(resultFile);
             }
             if (!Main.reviewFileExists(resultFile)) {
+                Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
                 Main.createReviewTemplates(resultFile, year);
             }
+            Main.LOGGER.log(Level.FINE, "Preparation done!");
         }
     }
 
