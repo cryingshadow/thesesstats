@@ -284,8 +284,9 @@ public class Main {
                 writer.write("\\appearancei{}\n");
                 writer.write("\\tocqualityi{}\n");
                 writer.write("\\listsi{}\n");
-                writer.write("\\goaliii{}\n");
+                writer.write("\\goalii{}\n");
                 writer.write("\\contributionsii{}\n");
+                writer.write("\\methodoverviewi{}\n");
                 writer.write("\\structurequalityiii{}\n");
                 writer.write("\\referencesi{}\n");
                 writer.write("\\conceptsintroducedi{}\n");
@@ -298,7 +299,8 @@ public class Main {
                 writer.write("\\tocqualityii{}\n");
                 writer.write("\\listsi{}\n");
                 writer.write("\\goaliii{}\n");
-                writer.write("\\contributionsiii{}\n");
+                writer.write("\\contributionsii{}\n");
+                writer.write("\\methodoverviewi{}\n");
                 writer.write("\\structurequalityiii{}\n");
                 writer.write("\\referencesi{}\n");
                 writer.write("\\conceptsintroducedi{}\n");
