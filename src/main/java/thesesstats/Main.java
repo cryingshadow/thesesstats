@@ -237,21 +237,6 @@ public class Main {
                 namePartsWithoutLast.toString(),
                 thesisType.name()
             );
-        final ReviewTemplate template;
-        switch (thesisType) {
-        case MA:
-            template = new ReviewTemplateMaster();
-            break;
-        case BA:
-            template = new ReviewTemplateBachelor();
-            break;
-        case PA:
-            template = new ReviewTemplatePractical();
-            break;
-        default:
-            template = new ReviewTemplateEssay();
-            break;
-        }
         try (
             BufferedWriter writer =
                 new BufferedWriter(
@@ -261,7 +246,7 @@ public class Main {
                     )
                 )
         ) {
-            template.writeTemplate(
+            Main.selectReviewTemplate(thesisType).writeTemplate(
                 String.join(" ", nameParts),
                 fileContent.title(),
                 fileContent.otherReviewer(),
@@ -373,6 +358,19 @@ public class Main {
             .filter(name -> name.startsWith("gutachten"))
             .findAny()
             .isPresent();
+    }
+
+    private static ReviewTemplate selectReviewTemplate(final ThesisType thesisType) {
+        switch (thesisType) {
+        case MA:
+            return new ReviewTemplateMaster();
+        case BA:
+            return new ReviewTemplateBachelor();
+        case PA:
+            return new ReviewTemplatePractical();
+        default:
+            return new ReviewTemplateEssay();
+        }
     }
 
     private static void spellcheck(final File resultFile) throws IOException, InterruptedException {
