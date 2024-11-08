@@ -16,7 +16,7 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
         writer.write("\\spellinggrammarii{}\n");
         writer.write("\\spellingpunctuationi{}\n");
         writer.write("\\languageii{}\n");
-        writer.write("\\illustrationsiv{}\n");
+        writer.write("\\illustrationiv{}\n");
         writer.write("\\figuresqualityii{}\n");
         writer.write("\\quotingstylei{}\n");
         writer.write("\\quotinglookupi{}\n");

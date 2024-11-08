@@ -16,7 +16,7 @@ public class ReviewTemplateMaster extends ReviewTemplate {
         writer.write("\\spellinggrammari{}\n");
         writer.write("\\spellingpunctuationi{}\n");
         writer.write("\\languagei{}\n");
-        writer.write("\\illustrationsiv{}\n");
+        writer.write("\\illustrationiv{}\n");
         writer.write("\\figuresqualityi{}\n");
         writer.write("\\quotingstylei{}\n");
         writer.write("\\quotinglookupi{}\n");
