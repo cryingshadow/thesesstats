@@ -2,8 +2,15 @@ package thesesstats;
 
 import java.io.*;
 import java.nio.charset.*;
+import java.util.*;
 
-public record ResultFile(Integer points, String grade, String[] nameParts, String title, String otherReviewer) {
+public record ResultFile(
+    Integer points,
+    String grade,
+    String[] nameParts,
+    String title,
+    Optional<String> otherReviewer
+) {
 
     public static ResultFile create(final File resultFile) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(resultFile, Charset.forName("UTF-8")))) {
@@ -15,7 +22,7 @@ public record ResultFile(Integer points, String grade, String[] nameParts, Strin
             final String[] nameParts = namePartsString == null ? new String[] {} : namePartsString.split(" ");
             final String title = reader.readLine();
             final String otherReviewer = reader.readLine();
-            return new ResultFile(points, grade, nameParts, title, otherReviewer);
+            return new ResultFile(points, grade, nameParts, title, Optional.ofNullable(otherReviewer));
         }
     }
 
@@ -34,14 +41,14 @@ public record ResultFile(Integer points, String grade, String[] nameParts, Strin
             writer.write(this.title);
         }
         writer.write("\n");
-        if (this.otherReviewer != null) {
-            writer.write(this.otherReviewer);
+        if (this.otherReviewer.isPresent()) {
+            writer.write(this.otherReviewer.get());
         }
         writer.write("\n");
     }
 
     public ResultFile setOtherReviewer(final String otherReviewer) {
-        return new ResultFile(this.points, this.grade, this.nameParts, this.title, otherReviewer);
+        return new ResultFile(this.points, this.grade, this.nameParts, this.title, Optional.of(otherReviewer));
     }
 
 }

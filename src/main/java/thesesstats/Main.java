@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.stream.*;
 
+import thesesstats.templates.*;
+
 public class Main {
 
     private static final String BACHELOR = "Bachelor";
@@ -84,8 +86,10 @@ public class Main {
             }
             return;
         }
-        final Reviewer reviewer = argsWithoutVerbose.length >= 3 ? Reviewer.valueOf(argsWithoutVerbose[2]) : Reviewer.FIRST;
-        final ThesisType type = argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
+        final Reviewer reviewer =
+            argsWithoutVerbose.length >= 3 ? Reviewer.valueOf(argsWithoutVerbose[2]) : Reviewer.FIRST;
+        final ThesisType type =
+            argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
         Main.statistics(root, reviewer, type, year);
     }
 
@@ -213,7 +217,7 @@ public class Main {
         return points;
     }
 
-    private static void createReviewTemplates(final File resultFile, final int year) throws IOException {
+    private static void createReviewFiles(final File resultFile, final int year) throws IOException {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
         final ResultFile fileContent = ResultFile.create(resultFile);
@@ -233,7 +237,21 @@ public class Main {
                 namePartsWithoutLast.toString(),
                 thesisType.name()
             );
-        final boolean isMaster = thesisType == ThesisType.MA;
+        final ReviewTemplate template;
+        switch (thesisType) {
+        case MA:
+            template = new ReviewTemplateMaster();
+            break;
+        case BA:
+            template = new ReviewTemplateBachelor();
+            break;
+        case PA:
+            template = new ReviewTemplatePractical();
+            break;
+        default:
+            template = new ReviewTemplateEssay();
+            break;
+        }
         try (
             BufferedWriter writer =
                 new BufferedWriter(
@@ -243,153 +261,12 @@ public class Main {
                     )
                 )
         ) {
-            writer.write("\\documentclass{article}\n\n");
-            writer.write("\\input{../../../../../templates/review/packages.tex}\n\n");
-            writer.write("\\newcommand{\\thesistype}{");
-            switch (thesisType) {
-            case MA:
-                writer.write("Masterarbeit");
-                break;
-            case BA:
-                writer.write("Bachelorarbeit");
-                break;
-            case PA:
-                writer.write("Praxisarbeit");
-                break;
-            default:
-                writer.write("Studienarbeit");
-                break;
-            }
-            writer.write("}\n");
-            writer.write("\\newcommand{\\thesistitle}{");
-            writer.write(fileContent.title());
-            writer.write("}\n");
-            writer.write("\\newcommand{\\thesisauthor}{");
-            writer.write(String.join(" ", nameParts));
-            writer.write("}\n");
-            writer.write("\\newcommand{\\reviewdate}{\\today}\n");
-            writer.write("\\newcommand{\\reviewplace}{Essen}\n");
-            writer.write("\\newcommand{\\signaturepath}{../../../../../Bilder/signature.png}\n");
-            writer.write("\\setboolean{restrictionnote}{false}\n");
-            writer.write("\\setboolean{pagebreakmiddle}{true}\n");
-            writer.write("\\setboolean{pagebreaktotal}{false}\n");
-            writer.write("\\setboolean{tworeviewers}{false}\n");
-            writer.write("\\newcommand{\\otherreviewer}{");
-            if (fileContent.otherReviewer() != null) {
-                writer.write(fileContent.otherReviewer());
-            }
-            writer.write("}\n");
-            writer.write("\n\\newcommand{\\structureReview}{%\n");
-            if (isMaster) {
-                writer.write("\\appearancei{}\n");
-                writer.write("\\tocqualityi{}\n");
-                writer.write("\\listsi{}\n");
-                writer.write("\\goalii{}\n");
-                writer.write("\\contributionsii{}\n");
-                writer.write("\\methodoverviewi{}\n");
-                writer.write("\\structurequalityiii{}\n");
-                writer.write("\\referencesi{}\n");
-                writer.write("\\conceptsintroducedi{}\n");
-                writer.write("\\basicsusedi{}\n");
-                writer.write("\\futurei{}\n");
-                writer.write("\\conclusionii{}\n");
-                writer.write("\\evaluationpartresult{15}\n");
-            } else {
-                writer.write("\\appearancei{}\n");
-                writer.write("\\tocqualityii{}\n");
-                writer.write("\\listsi{}\n");
-                writer.write("\\goaliii{}\n");
-                writer.write("\\contributionsii{}\n");
-                writer.write("\\methodoverviewi{}\n");
-                writer.write("\\structurequalityiii{}\n");
-                writer.write("\\referencesi{}\n");
-                writer.write("\\conceptsintroducedi{}\n");
-                writer.write("\\basicsusedi{}\n");
-                writer.write("\\futureii{}\n");
-                writer.write("\\conclusionii{}\n");
-                writer.write("\\evaluationpartresult{20}\n");
-            }
-            writer.write("}\n\n");
-            writer.write("\\newcommand{\\methodsReview}{%\n");
-            if (isMaster) {
-                writer.write("\\literatureamountiv{}\n");
-                writer.write("\\literaturequalityiv{}\n");
-                writer.write("\\relatedamountiv{}\n");
-                writer.write("\\relatedqualityiv{}\n");
-                writer.write("\\methodapplicationiv{}\n");
-                writer.write("\\methodintroiv{}\n");
-                writer.write("\\objectivityii{}\n");
-                writer.write("\\reliabilityii{}\n");
-                writer.write("\\validityiv{}\n");
-                writer.write("\\comprehensibilityiv{}\n");
-                writer.write("\\examplesiv{}\n");
-                writer.write("\\evaluationpartresult{40}\n");
-            } else {
-                writer.write("\\literatureamountiii{}\n");
-                writer.write("\\literaturequalityiii{}\n");
-                writer.write("\\relatedamountiii{}\n");
-                writer.write("\\relatedqualityiii{}\n");
-                writer.write("\\methodapplicationiii{}\n");
-                writer.write("\\methodintroiii{}\n");
-                writer.write("\\objectivityii{}\n");
-                writer.write("\\reliabilityii{}\n");
-                writer.write("\\validityii{}\n");
-                writer.write("\\comprehensibilityiv{}\n");
-                writer.write("\\examplesiv{}\n");
-                writer.write("\\evaluationpartresult{30}\n");
-            }
-            writer.write("}\n\n");
-            writer.write("\\newcommand{\\contentReview}{%\n");
-            writer.write("Die Arbeit liefert die folgenden inhaltlichen Beiträge:\n");
-            writer.write("\\begin{itemize}\n");
-            writer.write("\\item Beitrag 1\n");
-            writer.write("\\end{itemize}\n");
-            writer.write("\\innovativenessvi{}\n");
-            writer.write("\\relevancevi{}\n");
-            writer.write("\\levelvi{}\n");
-            writer.write("\\applicabilityvi{}\n");
-            writer.write("\\valuevi{}\n");
-            writer.write("\\evaluationpartresult{30}\n");
-            writer.write("}\n\n");
-            writer.write("\\newcommand{\\formalReview}{%\n");
-            if (isMaster) {
-                writer.write("\\distancesi{}\n");
-                writer.write("\\spellingautoii{}\n");
-                writer.write("\\spellinggrammari{}\n");
-                writer.write("\\spellingpunctuationi{}\n");
-                writer.write("\\languagei{}\n");
-                writer.write("\\figuresamountii{}\n");
-                writer.write("\\figuresqualityi{}\n");
-                writer.write("\\quotingstylei{}\n");
-                writer.write("\\quotinglookupi{}\n");
-                writer.write("\\quotingdensityii{}\n");
-                writer.write("\\literaturestylei{}\n");
-                writer.write("\\literaturepropsi{}\n");
-                writer.write("\\diligenceiii{}\n");
-                writer.write("\\evaluationpartresult{15}\n");
-            } else {
-                writer.write("\\distancesi{}\n");
-                writer.write("\\spellingautoiii{}\n");
-                writer.write("\\spellinggrammarii{}\n");
-                writer.write("\\spellingpunctuationi{}\n");
-                writer.write("\\languageii{}\n");
-                writer.write("\\figuresamountii{}\n");
-                writer.write("\\figuresqualityii{}\n");
-                writer.write("\\quotingstylei{}\n");
-                writer.write("\\quotinglookupi{}\n");
-                writer.write("\\quotingdensityii{}\n");
-                writer.write("\\literaturestylei{}\n");
-                writer.write("\\literaturepropsii{}\n");
-                writer.write("\\diligenceiii{}\n");
-                writer.write("\\evaluationpartresult{20}\n");
-            }
-            writer.write("}\n\n");
-            writer.write("\\newcommand{\\totalReview}{%\n");
-            writer.write(
-                "Insgesamt wurden \\evaluationpoints{} Punkte erreicht und das Gesamturteil lautet: \\grade\n"
+            template.writeTemplate(
+                String.join(" ", nameParts),
+                fileContent.title(),
+                fileContent.otherReviewer(),
+                writer
             );
-            writer.write("}\n\n");
-            writer.write("\\input{../../../../../templates/review/review.tex}\n");
         }
         try (
             BufferedWriter writer =
@@ -484,7 +361,7 @@ public class Main {
             }
             if (!Main.reviewFileExists(resultFile)) {
                 Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
-                Main.createReviewTemplates(resultFile, year);
+                Main.createReviewFiles(resultFile, year);
             }
             Main.LOGGER.log(Level.FINE, "Preparation done!");
         }
@@ -569,9 +446,9 @@ public class Main {
         for (int year = 2022; year <= 2024; year++) {
             for (final File resultFile : Main.findAllResultFiles(root, year)) {
                 final ResultFile content = ResultFile.create(resultFile);
-                if (content.otherReviewer() != null) {
+                if (content.otherReviewer().isPresent()) {
                     try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultFile))) {
-                        content.setOtherReviewer(content.otherReviewer().replace(".\\ ", ".\\,")).write(writer);
+                        content.setOtherReviewer(content.otherReviewer().get().replace(".\\ ", ".\\,")).write(writer);
                     }
                 }
             }
