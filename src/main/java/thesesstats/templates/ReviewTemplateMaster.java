@@ -5,6 +5,11 @@ import java.io.*;
 public class ReviewTemplateMaster extends ReviewTemplate {
 
     @Override
+    protected String version() {
+        return "MA 1.0";
+    }
+
+    @Override
     String thesisType() {
         return "Masterarbeit";
     }

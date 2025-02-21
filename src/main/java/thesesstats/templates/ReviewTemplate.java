@@ -5,12 +5,45 @@ import java.util.*;
 
 public abstract class ReviewTemplate {
 
+    public boolean isOlderVersion(final String version) {
+        final String type = version.substring(0, 3);
+        final String currentVersion = this.version();
+        final String currentType = currentVersion.substring(0, 3);
+        if (!type.equals(currentType)) {
+            return false;
+        }
+        final String[] versionNumber = version.substring(3).split("\\.");
+        final String[] currentVersionNumber = currentVersion.substring(3).split("\\.");
+        int i = 0;
+        while (i < versionNumber.length && i < currentVersionNumber.length) {
+            final int compare =
+                Integer.compare(Integer.parseInt(versionNumber[i]), Integer.parseInt(currentVersionNumber[i]));
+            if (compare < 0) {
+                return true;
+            } else if (compare > 0) {
+                return false;
+            }
+            i++;
+        }
+        if (versionNumber.length < currentVersionNumber.length) {
+            while (i < currentVersionNumber.length) {
+                if (Integer.parseInt(currentVersionNumber[i]) > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void writeTemplate(
         final String author,
         final String title,
         final Optional<String> otherReviewer,
         final BufferedWriter writer
     ) throws IOException {
+        writer.write("%version: ");
+        writer.write(this.version());
+        writer.write("\n%empty\n");
         writer.write("\\documentclass{article}\n\n");
         writer.write("\\input{../../../../../templates/review/packages.tex}\n\n");
         writer.write("\\newcommand{\\thesistype}{");
@@ -53,6 +86,8 @@ public abstract class ReviewTemplate {
         writer.write("}\n\n");
         writer.write("\\input{../../../../../templates/review/review.tex}\n");
     }
+
+    protected abstract String version();
 
     abstract String thesisType();
 

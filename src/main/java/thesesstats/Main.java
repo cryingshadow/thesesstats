@@ -217,7 +217,7 @@ public class Main {
         return points;
     }
 
-    private static void createReviewFiles(final File resultFile, final int year) throws IOException {
+    private static void createOrUpdateReviewFiles(final File resultFile, final int year) throws IOException {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
         final ResultFile fileContent = ResultFile.create(resultFile);
@@ -237,16 +237,19 @@ public class Main {
                 namePartsWithoutLast.toString(),
                 thesisType.name()
             );
-        try (
-            BufferedWriter writer =
-                new BufferedWriter(
-                    new FileWriter(
-                        directory.resolve(String.format("%s.tex", prefix)).toFile(),
-                        Main.UTF8
-                    )
-                )
-        ) {
-            Main.selectReviewTemplate(thesisType).writeTemplate(
+        final File reviewFile = directory.resolve(String.format("%s.tex", prefix)).toFile();
+        final ReviewTemplate template = Main.selectReviewTemplate(thesisType);
+        if (reviewFile.exists()) {
+            if (Main.isEmptyAndOlderVersion(reviewFile, template)) {
+                Main.LOGGER.log(Level.FINE, "Updating templates for result file: " + resultFile.toString());
+            } else {
+                return;
+            }
+        } else {
+            Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reviewFile, Main.UTF8))) {
+            template.writeTemplate(
                 String.join(" ", nameParts),
                 fileContent.title(),
                 fileContent.otherReviewer(),
@@ -325,6 +328,11 @@ public class Main {
         return String.format("%s mit %s", type.title, reviewer.title);
     }
 
+    private static boolean isEmptyAndOlderVersion(final File reviewFile, final ReviewTemplate template) throws IOException {
+        final List<String> firstTwoLines = Files.lines(reviewFile.toPath()).limit(2).toList();
+        return "%empty".equals(firstTwoLines.get(1)) && template.isOlderVersion(firstTwoLines.get(0).substring(9));
+    }
+
     private static boolean isLong(final File result) {
         try {
             return Files.lines(result.toPath()).toList().contains("long");
@@ -344,20 +352,9 @@ public class Main {
                 Main.LOGGER.log(Level.FINE, "Spell checking result file: " + resultFile.toString());
                 Main.spellcheck(resultFile);
             }
-            if (!Main.reviewFileExists(resultFile)) {
-                Main.LOGGER.log(Level.FINE, "Creating templates for result file: " + resultFile.toString());
-                Main.createReviewFiles(resultFile, year);
-            }
+            Main.createOrUpdateReviewFiles(resultFile, year);
             Main.LOGGER.log(Level.FINE, "Preparation done!");
         }
-    }
-
-    private static boolean reviewFileExists(final File resultFile) {
-        return Arrays
-            .stream(resultFile.toPath().getParent().toFile().list())
-            .filter(name -> name.startsWith("gutachten"))
-            .findAny()
-            .isPresent();
     }
 
     private static ReviewTemplate selectReviewTemplate(final ThesisType thesisType) {

@@ -5,6 +5,11 @@ import java.io.*;
 public class ReviewTemplateBachelor extends ReviewTemplate {
 
     @Override
+    protected String version() {
+        return "BA 1.0";
+    }
+
+    @Override
     String thesisType() {
         return "Bachelorarbeit";
     }
@@ -32,7 +37,9 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
         writer.write("\\literaturequalityiii{}\n");
         writer.write("\\quotingdensityiii{}\n");
         writer.write("\\relatedamountiii{}\n");
-        writer.write("\\relatedqualityiii{}\n");
+        writer.write("\\relatedcontenti{}\n");
+        writer.write("\\relateddifferencei{}\n");
+        writer.write("\\relatednewi{}\n");
         writer.write("\\methodapplicationiii{}\n");
         writer.write("\\methodintroiii{}\n");
         writer.write("\\objectivityii{}\n");
@@ -45,17 +52,21 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
     @Override
     void writeStructureTemplate(final BufferedWriter writer) throws IOException {
         writer.write("\\appearancei{}\n");
-        writer.write("\\tocqualityii{}\n");
+        writer.write("\\toccontributionsmethodii{}{}\n");
         writer.write("\\listsi{}\n");
-        writer.write("\\goaliii{}\n");
+        writer.write("\\goalii{}\n");
         writer.write("\\contributionsii{}\n");
         writer.write("\\methodoverviewi{}\n");
-        writer.write("\\structurequalityiii{}\n");
+        writer.write("\\structureoverviewi{}\n");
+        writer.write("\\structurequalityi{}\n");
+        writer.write("\\structurebridgei{}\n");
+        writer.write("\\structurefasti{}\n");
         writer.write("\\referencesi{}\n");
         writer.write("\\conceptsintroducedi{}\n");
         writer.write("\\basicsusedi{}\n");
         writer.write("\\futureii{}\n");
-        writer.write("\\conclusionii{}\n");
+        writer.write("\\conclusioncontributionsi{}\n");
+        writer.write("\\conclusiongoali{}\n");
         writer.write("\\evaluationpartresult{20}\n");
     }
 
