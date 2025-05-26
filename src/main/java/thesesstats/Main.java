@@ -50,7 +50,7 @@ public class Main {
         }
         if (args.length < 2 || args.length == 1 && "-h".equals(args[0])) {
             System.out.println(
-                "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) mit "
+                "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) | UNFINISHED mit "
                 + "REVIEWER = ALL | FIRST | SECOND und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
             );
             return;
@@ -77,6 +77,11 @@ public class Main {
             Main.prepare(root, year);
             return;
         }
+        if (argsWithoutVerbose.length == 3 && "unfinished".equals(argsWithoutVerbose[2].toLowerCase())) {
+            Main.LOGGER.log(Level.FINE, "Computing unfinished reviews...");
+            Main.unfinished(root, year);
+            return;
+        }
         Main.LOGGER.log(Level.FINE, "Computing statistics...");
         if (argsWithoutVerbose.length == 2) {
             for (final Reviewer reviewer : Reviewer.values()) {
@@ -91,6 +96,31 @@ public class Main {
         final ThesisType type =
             argsWithoutVerbose.length >= 4 ? ThesisType.valueOf(argsWithoutVerbose[3]) : ThesisType.ALL;
         Main.statistics(root, reviewer, type, year);
+    }
+
+    private static void unfinished(File root, int year) throws IOException {
+        int unfinished = 0;
+        List<Integer> years = new LinkedList<Integer>();
+        if (year == 0) {
+            int yearToday = Year.now().getValue();
+            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
+                years.add(currentYear);
+            }
+        } else {
+            years.add(year);
+        }
+        for (int currentYear : years) {
+            for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
+                Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
+                if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
+                    unfinished++;
+                    System.out.println(resultFile.toPath().getParent().toString());
+                }
+                Main.LOGGER.log(Level.FINEST, "Check done!");
+            }
+        }
+        System.out.print("Total: ");
+        System.out.println(unfinished);
     }
 
     private static int[] countGrades(
