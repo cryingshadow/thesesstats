@@ -98,29 +98,8 @@ public class Main {
         Main.statistics(root, reviewer, type, year);
     }
 
-    private static void unfinished(File root, int year) throws IOException {
-        int unfinished = 0;
-        List<Integer> years = new LinkedList<Integer>();
-        if (year == 0) {
-            int yearToday = Year.now().getValue();
-            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
-                years.add(currentYear);
-            }
-        } else {
-            years.add(year);
-        }
-        for (int currentYear : years) {
-            for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
-                Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
-                if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
-                    unfinished++;
-                    System.out.println(resultFile.toPath().getParent().toString());
-                }
-                Main.LOGGER.log(Level.FINEST, "Check done!");
-            }
-        }
-        System.out.print("Total: ");
-        System.out.println(unfinished);
+    private static boolean containsPDF(final File resultFile) {
+        return Arrays.stream(resultFile.getParentFile().list()).anyMatch(file -> file.toLowerCase().matches(".*pdf"));
     }
 
     private static int[] countGrades(
@@ -495,6 +474,39 @@ public class Main {
 
     private static List<Thesis> toTheses(final Stream<File> stream) {
         return stream.map(Thesis::fromFile).toList();
+    }
+
+    private static void unfinished(final File root, final int year) throws IOException {
+        int registered = 0;
+        int submitted = 0;
+        final List<Integer> years = new LinkedList<Integer>();
+        if (year == 0) {
+            final int yearToday = Year.now().getValue();
+            for (int currentYear = 2022; currentYear <= yearToday; currentYear++) {
+                years.add(currentYear);
+            }
+        } else {
+            years.add(year);
+        }
+        for (final int currentYear : years) {
+            for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
+                Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
+                if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
+                    if (Main.containsPDF(resultFile)) {
+                        submitted++;
+                        System.out.print("SUBMITTED: ");
+                    } else {
+                        registered++;
+                        System.out.print("REGISTERED: ");
+                    }
+                    System.out.println(resultFile.toPath().getParent().toString());
+                }
+                Main.LOGGER.log(Level.FINEST, "Check done!");
+            }
+        }
+        System.out.println(
+            String.format("Total: %d (%d registered, %d submitted)", registered + submitted, registered, submitted)
+        );
     }
 
     private static void writePoints(final Points points, final File file) throws IOException {
