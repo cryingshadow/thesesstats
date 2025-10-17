@@ -32,7 +32,7 @@ public class Main {
 
     private static final String STATISTICS = "Statistik";
 
-    private static final String STATISTICS_FILE = "statistics%s%s%d.tex";
+    private static final String STATISTICS_FILE = "statistics%s%s%s.tex";
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -108,20 +108,24 @@ public class Main {
         final Reviewer reviewer,
         final ThesisType type
     ) throws IOException {
-        final List<File> files;
-        switch (reviewer) {
-        case ALL:
-            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, year);
-            files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, year));
-            break;
-        case FIRST:
-            files = Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, year);
-            break;
-        case SECOND:
-            files = Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, year);
-            break;
-        default:
-            throw new IllegalStateException("Unknown Selection occurred!");
+        final List<File> files = new LinkedList<File>();
+        final int fromYear = year > 0 ? year : 2022;
+        final int toYear = year > 0 ? year : Year.now().getValue();
+        for (int currentYear = fromYear; currentYear <= toYear; currentYear++) {
+            switch (reviewer) {
+            case ALL:
+                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
+                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
+                break;
+            case FIRST:
+                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.FIRST), type, currentYear));
+                break;
+            case SECOND:
+                files.addAll(Main.findResultFiles(root.toPath().resolve(Main.SECOND), type, currentYear));
+                break;
+            default:
+                throw new IllegalStateException("Unknown Selection occurred!");
+            }
         }
         return Main.countGrades(files);
     }
@@ -333,6 +337,10 @@ public class Main {
         return result;
     }
 
+    private static String formatYearForStatistics(final int year) {
+        return year > 0 ? String.valueOf(year) : "seit 2022";
+    }
+
     private static String getTitle(final Reviewer reviewer, final ThesisType type) {
         return String.format("%s mit %s", type.title, reviewer.title);
     }
@@ -464,8 +472,12 @@ public class Main {
             Main.STATISTICS_FILE,
             reviewer.name().charAt(0) + reviewer.name().substring(1).toLowerCase(),
             type.name(),
-            year
+            Main.toStatisticsFileNamePart(year)
         );
+    }
+
+    private static String toStatisticsFileNamePart(final int year) {
+        return year > 0 ? String.valueOf(year) : "AllTime";
     }
 
     private static List<Thesis> toTheses(final List<File> resultFiles) {
@@ -589,7 +601,13 @@ public class Main {
             writer.write("    }\\mydata\n\n");
             writer.write("\\vspace*{2cm}\n\n");
             writer.write("\\begin{center}\n\n");
-            writer.write(String.format("{\\Huge \\textbf{Notenspiegel %s Ströder %d}}\n\n", title, year));
+            writer.write(
+                String.format(
+                    "{\\Huge \\textbf{Notenspiegel %s Ströder %s}}\n\n",
+                    title,
+                    Main.formatYearForStatistics(year)
+                )
+            );
             writer.write("\\vspace*{1cm}\n\n");
             writer.write("{\\large\n");
             writer.write("\\begin{tikzpicture}\n");
@@ -615,6 +633,7 @@ public class Main {
             writer.write("}\n\n");
             writer.write("\\vspace*{8mm}\n\n");
             writer.write(String.format(Locale.GERMAN, "Notendurchschnitt: %.1f\n\n", average));
+            writer.write(String.format(Locale.GERMAN, "$n = %d$\n\n", count));
             writer.write("\\end{center}\n\n");
             writer.write("\\end{document}\n");
         }

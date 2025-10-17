@@ -151,6 +151,7 @@ public class MainTest {
             + "}\n\n"
             + "\\vspace*{8mm}\n\n"
             + "Notendurchschnitt: 2,7\n\n"
+            + "$n = 2$\n\n"
             + "\\end{center}\n\n"
             + "\\end{document}\n"
         );
