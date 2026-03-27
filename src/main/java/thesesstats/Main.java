@@ -234,7 +234,7 @@ public class Main {
         final ThesisType thesisType = ThesisType.fromFile(resultFile);
         final Path directory = resultFile.getAbsoluteFile().toPath().getParent();
         final ResultFile fileContent = ResultFile.create(resultFile);
-        if (fileContent.title().isBlank()) {
+        if (fileContent.title().isBlank() || (fileContent.grade() != null && !fileContent.grade().isBlank())) {
             return;
         }
         final String[] nameParts = fileContent.nameParts();
