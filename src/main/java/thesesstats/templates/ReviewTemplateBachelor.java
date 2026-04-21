@@ -6,7 +6,7 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
 
     @Override
     protected String version() {
-        return "BA 1.0";
+        return "BA 2.0";
     }
 
     @Override
@@ -40,8 +40,9 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
         writer.write("\\relatedcontenti{}\n");
         writer.write("\\relateddifferencei{}\n");
         writer.write("\\relatednewi{}\n");
+        writer.write("\\methodintroi{}\n");
+        writer.write("\\methodcoverii{}\n");
         writer.write("\\methodapplicationiii{}\n");
-        writer.write("\\methodintroiii{}\n");
         writer.write("\\objectivityii{}\n");
         writer.write("\\reliabilityii{}\n");
         writer.write("\\validityii{}\n");

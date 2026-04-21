@@ -6,7 +6,7 @@ public class ReviewTemplateMaster extends ReviewTemplate {
 
     @Override
     protected String version() {
-        return "MA 1.0";
+        return "MA 2.0";
     }
 
     @Override
@@ -38,8 +38,9 @@ public class ReviewTemplateMaster extends ReviewTemplate {
         writer.write("\\quotingdensityiv{}\n");
         writer.write("\\relatedamountiv{}\n");
         writer.write("\\relatedqualityiv{}\n");
+        writer.write("\\methodintroi{}\n");
+        writer.write("\\methodcoveriii{}\n");
         writer.write("\\methodapplicationiv{}\n");
-        writer.write("\\methodintroiv{}\n");
         writer.write("\\objectivityii{}\n");
         writer.write("\\reliabilityii{}\n");
         writer.write("\\validityiv{}\n");
