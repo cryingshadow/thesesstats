@@ -6,9 +6,9 @@ import java.util.*;
 public abstract class ReviewTemplate {
 
     public boolean isOlderVersion(final String version) {
-        final String type = version.substring(0, 3);
+        final String type = version.substring(0, 2);
         final String currentVersion = this.version();
-        final String currentType = currentVersion.substring(0, 3);
+        final String currentType = currentVersion.substring(0, 2);
         if (!type.equals(currentType)) {
             return false;
         }

@@ -347,7 +347,7 @@ public class Main {
 
     private static boolean isEmptyAndOlderVersion(final File reviewFile, final ReviewTemplate template) throws IOException {
         final List<String> firstTwoLines = Files.lines(reviewFile.toPath()).limit(2).toList();
-        return "%empty".equals(firstTwoLines.get(1)) && template.isOlderVersion(firstTwoLines.get(0).substring(9));
+        return "%empty".equals(firstTwoLines.get(1)) && template.isOlderVersion(firstTwoLines.get(0).substring(10));
     }
 
     private static boolean isLong(final File result) {
