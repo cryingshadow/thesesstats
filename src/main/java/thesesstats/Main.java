@@ -3,6 +3,7 @@ package thesesstats;
 import java.io.*;
 import java.nio.charset.*;
 import java.nio.file.*;
+import java.text.*;
 import java.time.*;
 import java.util.*;
 import java.util.logging.*;
@@ -489,8 +490,6 @@ public class Main {
     }
 
     private static void unfinished(final File root, final int year) throws IOException {
-        int registered = 0;
-        int submitted = 0;
         final List<Integer> years = new LinkedList<Integer>();
         if (year == 0) {
             final int yearToday = Year.now().getValue();
@@ -500,21 +499,46 @@ public class Main {
         } else {
             years.add(year);
         }
+        final List<TopicSubmission> submissions = new ArrayList<TopicSubmission>();
         for (final int currentYear : years) {
             for (final File resultFile : Main.findAllResultFiles(root, currentYear)) {
                 Main.LOGGER.log(Level.FINEST, "Checking result file: " + resultFile.toString());
                 if (Files.lines(resultFile.toPath()).findFirst().get().isBlank()) {
-                    if (Main.containsPDF(resultFile)) {
-                        submitted++;
-                        System.out.print("SUBMITTED: ");
-                    } else {
-                        registered++;
-                        System.out.print("REGISTERED: ");
+                    final List<String> data = Files.lines(resultFile.toPath()).skip(2).toList();
+                    try {
+                        submissions.add(
+                            new TopicSubmission(
+                                resultFile.toPath().getParent().getParent().getFileName().toString(),
+                                data.get(0),
+                                TopicSubmission.FORMAT.parse(data.get(3)),
+                                Main.containsPDF(resultFile)
+                            )
+                        );
+                    } catch (ParseException | IndexOutOfBoundsException e) {
+                        throw new IOException(data.get(0) + ", " + data.get(1), e);
                     }
-                    System.out.println(resultFile.toPath().getParent().toString());
                 }
                 Main.LOGGER.log(Level.FINEST, "Check done!");
             }
+        }
+        Collections.sort(submissions);
+        int registered = 0;
+        int submitted = 0;
+        for (final TopicSubmission submission : submissions) {
+            System.out.print(TopicSubmission.FORMAT.format(submission.due()));
+            System.out.print(" (");
+            if (submission.submitted()) {
+                submitted++;
+                System.out.print("SUBMITTED");
+            } else {
+                registered++;
+                System.out.print("REGISTERED");
+            }
+            System.out.print("): ");
+            System.out.print(submission.student());
+            System.out.print(" (");
+            System.out.print(submission.type());
+            System.out.println(")");
         }
         System.out.println(
             String.format("Total: %d (%d registered, %d submitted)", registered + submitted, registered, submitted)
