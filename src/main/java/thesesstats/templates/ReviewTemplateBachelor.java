@@ -6,7 +6,7 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
 
     @Override
     protected String version() {
-        return "BA 2.0";
+        return "BA 3.0";
     }
 
     @Override
@@ -35,12 +35,13 @@ public class ReviewTemplateBachelor extends ReviewTemplate {
     void writeMethodsTemplate(final BufferedWriter writer) throws IOException {
         writer.write("\\literatureamountiii{}\n");
         writer.write("\\literaturequalityiii{}\n");
-        writer.write("\\quotingdensityiii{}\n");
+        writer.write("\\quotingapplicationiii{}\n");
         writer.write("\\relatedamountiii{}\n");
         writer.write("\\relatedcontenti{}\n");
         writer.write("\\relateddifferencei{}\n");
         writer.write("\\relatednewi{}\n");
         writer.write("\\methodintroi{}\n");
+        writer.write("\\methodreasoni{}\n");
         writer.write("\\methodcoverii{}\n");
         writer.write("\\methodapplicationiii{}\n");
         writer.write("\\objectivityii{}\n");

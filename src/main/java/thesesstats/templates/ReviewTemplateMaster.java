@@ -6,7 +6,7 @@ public class ReviewTemplateMaster extends ReviewTemplate {
 
     @Override
     protected String version() {
-        return "MA 2.0";
+        return "MA 3.0";
     }
 
     @Override
@@ -35,10 +35,14 @@ public class ReviewTemplateMaster extends ReviewTemplate {
     void writeMethodsTemplate(final BufferedWriter writer) throws IOException {
         writer.write("\\literatureamountiv{}\n");
         writer.write("\\literaturequalityiv{}\n");
-        writer.write("\\quotingdensityiv{}\n");
+        writer.write("\\quotingapplicationiv{}\n");
+        writer.write("\\relatedlookupi{}\n");
         writer.write("\\relatedamountiv{}\n");
-        writer.write("\\relatedqualityiv{}\n");
+        writer.write("\\relatedcontenti{}\n");
+        writer.write("\\relateddifferencei{}\n");
+        writer.write("\\relatednewi{}\n");
         writer.write("\\methodintroi{}\n");
+        writer.write("\\methodreasoni{}\n");
         writer.write("\\methodcoveriii{}\n");
         writer.write("\\methodapplicationiv{}\n");
         writer.write("\\objectivityii{}\n");
