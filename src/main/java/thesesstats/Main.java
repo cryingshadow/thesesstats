@@ -49,7 +49,7 @@ public class Main {
             Main.support(new File(System.getProperty("user.dir")));
             return;
         }
-        if (args.length < 2 || args.length == 1 && "-h".equals(args[0])) {
+        if (args.length == 0) {
             System.out.println(
                 "Aufruf mit ROOT YEAR [MODE], wobei MODE = PREPARE | POINTS | (REVIEWER TYPE) | UNFINISHED mit "
                 + "REVIEWER = ALL | FIRST | SECOND und TYPE = ALL | ALL_BUT_PA | BA | MA | PA"
@@ -66,8 +66,8 @@ public class Main {
         }
         Main.LOGGER.log(Level.FINE, "Root file: " + argsWithoutVerbose[0]);
         final File root = new File(argsWithoutVerbose[0]);
-        Main.LOGGER.log(Level.FINE, "Year: " + argsWithoutVerbose[1]);
-        final int year = Integer.parseInt(argsWithoutVerbose[1]);
+        final int year = argsWithoutVerbose.length > 1 ? Integer.parseInt(argsWithoutVerbose[1]) : -1;
+        Main.LOGGER.log(Level.FINE, "Year: " + year);
         if (argsWithoutVerbose.length == 3 && "points".equals(argsWithoutVerbose[2].toLowerCase())) {
             Main.LOGGER.log(Level.FINE, "Calculating POINTS...");
             Main.writePoints(Main.countPoints(root, year), root.toPath().resolve("points" + year + ".txt").toFile());
@@ -84,7 +84,7 @@ public class Main {
             return;
         }
         Main.LOGGER.log(Level.FINE, "Computing statistics...");
-        if (argsWithoutVerbose.length == 2) {
+        if (argsWithoutVerbose.length < 3) {
             for (final Reviewer reviewer : Reviewer.values()) {
                 for (final ThesisType type : ThesisType.values()) {
                     Main.statistics(root, reviewer, type, year);
@@ -443,16 +443,20 @@ public class Main {
         final ThesisType type,
         final int year
     ) throws IOException {
-        Main.writeStatistics(
-            Main.getTitle(reviewer, type),
-            year,
-            Main.countGrades(root, year, reviewer, type),
-            root
-            .toPath()
-            .resolve(Main.STATISTICS)
-            .resolve(Main.toStatisticsFileName(reviewer, type, year))
-            .toFile()
-        );
+        final int fromYear = year == -1 ? 2022 : year;
+        final int toYear = year == -1 ? Year.now().getValue() : year;
+        for (int currentYear = fromYear; currentYear <= toYear; currentYear++) {
+            Main.writeStatistics(
+                Main.getTitle(reviewer, type),
+                currentYear,
+                Main.countGrades(root, currentYear, reviewer, type),
+                root
+                .toPath()
+                .resolve(Main.STATISTICS)
+                .resolve(Main.toStatisticsFileName(reviewer, type, currentYear))
+                .toFile()
+            );
+        }
     }
 
     private static void support(final File root) throws IOException {
